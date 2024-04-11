@@ -68,16 +68,15 @@ internal class ClickHouseParameterCollection : DbParameterCollection
 
     public override string ToString() => string.Join(";", parameters);
 
-    internal string ReplacePlaceholders(string sqlQuery)
+    internal string ReplacePlaceHoldersWithValues(string sqlQuery)
     {
         if (FeatureSwitch.DisableReplacingParameters || parameters.Count == 0)
             return sqlQuery;
-
-        var replacements = new Dictionary<string, string>();
-        // Using foreach+TryAdd as parameter collection can in theory contain duplicate names
-        foreach (var p in parameters)
-            replacements.TryAdd("@" + p.ParameterName, p.QueryForm);
-
-        return sqlQuery.ReplaceMultiple(replacements);
+        foreach (var param in parameters)
+        {
+            var typeName = param.QueryForm.Split(':', '{', '}')[2];
+            sqlQuery = sqlQuery.Replace($"@{param.ParameterName}", $"'{param.Value}'::{typeName}");
+        }
+        return sqlQuery;
     }
 }

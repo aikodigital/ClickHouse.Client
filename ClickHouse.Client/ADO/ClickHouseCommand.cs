@@ -154,15 +154,11 @@ public class ClickHouseCommand : DbCommand, IClickHouseCommand, IDisposable
         using var activity = connection.StartActivity("PostSqlQueryAsync");
 
         var uriBuilder = connection.CreateUriBuilder();
-        await connection.EnsureOpenAsync().ConfigureAwait(false); // Preserve old behavior
+        await connection.EnsureOpenAsync().ConfigureAwait(false);
 
         if (commandParameters != null)
         {
-            sqlQuery = commandParameters.ReplacePlaceholders(sqlQuery);
-            foreach (ClickHouseDbParameter parameter in commandParameters)
-            {
-                uriBuilder.AddQueryParameter(parameter.ParameterName, HttpParameterFormatter.Format(parameter, connection.TypeSettings));
-            }
+            sqlQuery = commandParameters.ReplacePlaceHoldersWithValues(sqlQuery);
         }
 
         activity.SetQuery(sqlQuery);
